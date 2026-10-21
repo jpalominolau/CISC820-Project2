@@ -24,8 +24,8 @@ double f(std::vector<double> x) {
         }
 
         double diff = b[i] - Ax_i;
-        if (diff <= 0.0) {
-            return 1e18;
+        if (diff <= 1e-12) {
+            return 1e18; 
         }
 
         term2 += std::log(diff);
@@ -93,9 +93,11 @@ int main() {
         std::cerr << "Error opening c.txt\n";
         return 1;
     }
+
     for (int j = 0; j < n; j++) {
         file_c >> c[j];
     }
+
     file_c.close();
 
     std::ifstream file_b("fun2_b.txt");
@@ -103,9 +105,11 @@ int main() {
         std::cerr << "Error opening b.txt\n";
         return 1;
     }
+
     for (int i = 0; i < m; i++) {
         file_b >> b[i];
     }
+
     file_b.close();
 
     std::ifstream file_A("fun2_A.txt");
@@ -113,11 +117,13 @@ int main() {
         std::cerr << "Error opening A.txt\n";
         return 1;
     }
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
+
+    for (int j = 0; j < n; j++) {
+        for (int i = 0; i < m; i++) {
             file_A >> A[i][j];
         }
     }
+
     file_A.close();
 
     std::cout << "Files loaded successfully!\n\n";

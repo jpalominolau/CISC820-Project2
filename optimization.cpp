@@ -29,7 +29,9 @@ double armijo(std::vector<double> x, std::vector<double> p, double c, double rho
             x_new[i] = x[i] + alpha * p[i];
         }
 
-        if (f(x_new) <= f(x) + c * alpha * grad_dot_p) {
+        double f_val = f(x_new);
+
+        if (f_val < 1e17 && f_val <= f(x) + c * alpha * grad_dot_p + 1e-15 * std::abs(f(x))) {
             break;
         }
 
@@ -92,15 +94,15 @@ void gradient_descent(std::vector<double> x0, double c, double rho, double alpha
 
         std::vector<double> p(x.size());
         for (int i = 0; i < x.size(); i++) {
-            p[i] = -grad[i];
+            p[i] = -grad[i] / norm;
         }
 
         double alpha = armijo(x, p, c, rho, alpha_init);
 
-        if (alpha < 1e-8) {
-            std::cout << "Line search failed (alpha < 1e-8) at iteration " << iter << "\n";
-            break;
-        }
+        // if (alpha < 1e-8) {
+        //     std::cout << "Line search failed (alpha < 1e-8) at iteration " << iter << "\n";
+        //     break;
+        // }
 
         for (int i = 0; i < x.size(); i++) {
             x[i] += alpha * p[i];
@@ -188,10 +190,10 @@ void bfgs(std::vector<double> x0, double c, double rho, double alpha_init, doubl
 
         double alpha = armijo(x, p, c, rho, alpha_init);
 
-        if (alpha < 1e-8) {
-            std::cout << "Line search failed (alpha < 1e-8) at iteration " << iter << "\n";
-            break;
-        }
+        // if (alpha < 1e-8) {
+        //     std::cout << "Line search failed (alpha < 1e-8) at iteration " << iter << "\n";
+        //     break;
+        // }
 
         std::vector<double> s(n);
         std::vector<double> x_next(n);
