@@ -1,6 +1,8 @@
 #include "optimization.hpp"
 #include <iostream>
+#include <fstream>
 #include <cmath>
+#include <cstdlib>
 
 double get_gradient_norm(std::vector<double> grad) {
     double sum = 0.0;
@@ -82,11 +84,14 @@ std::vector<double> solve_linear_system(std::vector<std::vector<double>> H, std:
 
 void gradient_descent(std::vector<double> x0, double c, double rho, double alpha_init, double tol, int max_iter) {
     std::vector<double> x = x0;
+    std::ofstream file("gd.csv");
 
     for (int iter = 1; iter <= max_iter; iter++) {
         std::vector<double> grad = get_gradient(x);
 
         double norm = get_gradient_norm(grad);
+        file << iter << " " << norm << "\n";
+
         if (norm < tol) {
             std::cout << "Converged in " << iter - 1 << " iterations!\n\n";
             break;
@@ -117,6 +122,8 @@ void gradient_descent(std::vector<double> x0, double c, double rho, double alpha
                   << " | alpha: " << alpha << "\n";
     }
 
+    file.close();
+
     std::cout << "--- OPTIMAL POINT FOUND (GRADIENT DESCENT) ---\n";
     std::cout << "Minimum f(x*): " << f(x) << "\n";
     // std::cout << "At x*: (" << x[0] << ", " << x[1] << ")\n";
@@ -125,11 +132,14 @@ void gradient_descent(std::vector<double> x0, double c, double rho, double alpha
 
 void newton(std::vector<double> x0, double c, double rho, double alpha_init, double tol, int max_iter) {
     std::vector<double> x = x0;
+    std::ofstream file("newton.csv");
 
     for (int iter = 1; iter <= max_iter; iter++) {
         std::vector<double> grad = get_gradient(x);
 
         double norm = get_gradient_norm(grad);
+        file << iter << " " << norm << "\n";
+
         if (norm < tol) {
             std::cout << "Converged in " << iter - 1 << " iterations!\n\n";
             break;
@@ -159,6 +169,8 @@ void newton(std::vector<double> x0, double c, double rho, double alpha_init, dou
                   << " | alpha: " << alpha << "\n";
     }
 
+    file.close();
+
     std::cout << "--- OPTIMAL POINT FOUND (NEWTON) ---\n";
     std::cout << "Minimum f(x*): " << f(x) << "\n";
     // std::cout << "At x*: (" << x[0] << ", " << x[1] << ")\n";
@@ -168,6 +180,7 @@ void newton(std::vector<double> x0, double c, double rho, double alpha_init, dou
 void bfgs(std::vector<double> x0, double c, double rho, double alpha_init, double tol, int max_iter) {
     std::vector<double> x = x0;
     int n = x.size();
+    std::ofstream file("bfgs.csv");
 
     std::vector<std::vector<double>> F(n, std::vector<double>(n, 0.0));
     for (int i = 0; i < n; i++) F[i][i] = 1.0;
@@ -176,6 +189,8 @@ void bfgs(std::vector<double> x0, double c, double rho, double alpha_init, doubl
         std::vector<double> grad = get_gradient(x);
 
         double norm = get_gradient_norm(grad);
+        file << iter << " " << norm << "\n";
+
         if (norm < tol) {
             std::cout << "Converged in " << iter - 1 << " iterations!\n\n";
             break;
@@ -249,8 +264,42 @@ void bfgs(std::vector<double> x0, double c, double rho, double alpha_init, doubl
                   << " | alpha: " << alpha << "\n";
     }
 
+    file.close();
+
     std::cout << "--- OPTIMAL POINT FOUND (BFGS) ---\n";
     std::cout << "Minimum f(x*): " << f(x) << "\n";
     // std::cout << "At x*: (" << x[0] << ", " << x[1] << ")\n";
     std::cout << "First 3 entries of x*: (" << x[0] << ", " << x[1] << ", " << x[2] << " ...)\n";
+}
+
+void plot_convergence(std::string title) {
+    std::ofstream gnuplot_script("plot.gp");
+
+    gnuplot_script << "set terminal pngcairo size 800,600 enhanced font 'Arial,10'\n";
+    gnuplot_script << "set output '" << title << "_convergence.png'\n";
+
+    gnuplot_script << "set title 'Convergence: " << title << "'\n";
+    gnuplot_script << "set xlabel 'Iterations (Log Scale)'\n";
+    gnuplot_script << "set ylabel '||Grad f(x)|| (Log Scale)'\n";
+
+    gnuplot_script << "set logscale x 10\n";
+    gnuplot_script << "set logscale y 10\n";
+
+    gnuplot_script << "set xrange [1 : 10000]\n";
+    gnuplot_script << "set yrange [1e-16 : *]\n";
+
+    gnuplot_script << "set format x '10^{%L}'\n";
+    gnuplot_script << "set format y '10^{%L}'\n";
+    
+    gnuplot_script << "set grid\n";
+
+    gnuplot_script << "plot 'gd.csv' using 1:($2 <= 0 ? 1e-16 : $2) with lines lw 2 title 'Gradient Descent', "
+                   << "'newton.csv' using 1:($2 <= 0 ? 1e-16 : $2) with lines lw 2 title 'Newton', "
+                   << "'bfgs.csv' using 1:($2 <= 0 ? 1e-16 : $2) with lines lw 2 title 'BFGS'\n";
+    gnuplot_script.close();
+
+    std::system("gnuplot plot.gp");
+    std::system("rm -f gd.csv newton.csv bfgs.csv plot.gp");
+
+    std::cout << "\nGraph successfully saved as: " << title << "_convergence.png\n";
 }

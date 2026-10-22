@@ -49,5 +49,7 @@ int main() {
     std::cout << "\n=== RUNNING BFGS METHOD ===\n";
     bfgs(x0, c_param, rho, alpha_init, tol, 10000);
 
+    plot_convergence("Function 1");
+
     return 0;
 }
